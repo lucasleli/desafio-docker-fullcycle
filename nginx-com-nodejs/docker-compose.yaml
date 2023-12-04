@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+
+  nginxfullcycle:
+    build:
+      context: nginx
+      dockerfile: Dockerfile.nginx
+    container_name: nginxfullcycle
+    restart: always
+    tty: true
+    networks:
+      - nodejsnet
+    ports:
+      - "8080:80"
+  
+  dbfullcycle:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: dbfullcycle
+    restart: always
+    tty: true
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=testfullcycle
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - nodejsnet
+    depends_on:
+      - nginxfullcycle
+  
+  nodejsfullcycle:
+    build:
+      context: nodejs
+      dockerfile: Dockerfile.node
+    container_name: nodejsfullcycle
+    command: ["/usr/bin/wait-for", "-t", "15", "dbfullcycle:3306", "--", "node", "server.js"]
+    restart: always
+    tty: true
+    networks:
+      - nodejsnet
+    depends_on:
+      - dbfullcycle
+
+networks:
+  nodejsnet:
+    driver: bridge
