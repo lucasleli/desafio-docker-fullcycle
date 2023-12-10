@@ -2,18 +2,6 @@ version: '3'
 
 services:
 
-  nginxfullcycle:
-    build:
-      context: nginx
-      dockerfile: Dockerfile.nginx
-    container_name: nginxfullcycle
-    restart: always
-    tty: true
-    networks:
-      - nodejsnet
-    ports:
-      - "8080:80"
-  
   dbfullcycle:
     image: mysql:5.7
     command: --innodb-use-native-aio=0
@@ -27,8 +15,6 @@ services:
       - MYSQL_ROOT_PASSWORD=root
     networks:
       - nodejsnet
-    depends_on:
-      - nginxfullcycle
   
   nodejsfullcycle:
     build:
@@ -42,6 +28,20 @@ services:
       - nodejsnet
     depends_on:
       - dbfullcycle
+  
+  nginxfullcycle:
+    build:
+      context: nginx
+      dockerfile: Dockerfile.nginx
+    container_name: nginxfullcycle
+    restart: always
+    tty: true
+    networks:
+      - nodejsnet
+    ports:
+      - "8080:80"
+    depends_on:
+      - nodejsfullcycle
 
 networks:
   nodejsnet:
